@@ -137,7 +137,19 @@ git config --global user.email "your.email@example.com"
 - Getting your Supabase values
 - Running the development server (`npm run dev`)
 
-📺 **[Watch the Video Tutorial](https://youtu.be/CW8MT0-lWas)**
+<div align="center">
+  
+  <a href="https://youtu.be/CW8MT0-lWas">
+    <img src="https://img.youtube.com/vi/CW8MT0-lWas/maxresdefault.jpg" alt="Quick Start Video Tutorial" style="width:100%;max-width:640px;">
+  </a>
+  
+  <br><br>
+  
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/CW8MT0-lWas" title="Quick Start Video Tutorial" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  
+</div>
+
+📺 **[Watch on YouTube](https://youtu.be/CW8MT0-lWas)**
 
 If you prefer written instructions, continue reading the detailed step-by-step guide below.
 
