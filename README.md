@@ -127,6 +127,20 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
+## Quick Start Video Tutorial
+
+**Prefer watching a video?** We have a step-by-step video tutorial that walks you through:
+- Forking the repository
+- Cloning it locally
+- Installing dependencies (`npm install`)
+- Setting up your environment variables (`.env.local`)
+- Getting your Supabase values
+- Running the development server (`npm run dev`)
+
+📺 **[Watch the Video Tutorial](https://youtu.be/CW8MT0-lWas)**
+
+If you prefer written instructions, continue reading the detailed step-by-step guide below.
+
 ## Step-by-Step Setup Instructions
 
 Follow these steps in order. If you get stuck, read each step carefully before moving to the next one.
