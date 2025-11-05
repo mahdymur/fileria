@@ -127,6 +127,8 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
+---
+
 ## How to make a copy of the template and get it running on your laptop:
 
 <div align="center">
