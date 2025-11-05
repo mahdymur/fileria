@@ -21,8 +21,11 @@ export default function ProtectedLayout({
     
               </div>
             </div>
-            {!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
+			<div className="flex items-center gap-2">
+   			{!hasEnvVars ? <EnvVarWarning /> : <AuthButton />}
 			 <ThemeSwitcher />
+			</div>
+         
           </div>
         </nav>
         <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
