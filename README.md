@@ -7,8 +7,8 @@ Welcome! This is a starter template for building web applications with Next.js a
 This template gives you a complete starting point for building a web application that includes:
 - **User authentication** (sign up, login, password reset)
 - **Protected pages** (pages only logged-in users can see)
-- **Modern UI components** (buttons, forms, cards, etc.)
-- **Dark mode support** (switch between light and dark themes)
+- Supabase database connection (database so your app can save stuff)
+- Vercel Hosting (So your app can be on the public internet)
 
 Think of it as a foundation you can build upon to create your own web application.
 
