@@ -79,6 +79,94 @@ export default function ExamplesPage() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Tutorial 4: What is a REST API</CardTitle>
+              <CardDescription>
+                Learn what REST APIs are and how they work
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                This example explains REST APIs with visual examples and explanations.
+              </p>
+              <Button asChild className="w-full">
+                <Link href="/examples/rest-api">View Example</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <a href="https://github.com/kyritzb/lp-template/blob/main/tutorials/4)%20What%20is%20a%20REST%20API/README.md" target="_blank" rel="noopener noreferrer">
+                  Read Tutorial
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Tutorial 5: Create a Backend Route</CardTitle>
+              <CardDescription>
+                Learn how to create API routes in Next.js
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                This example demonstrates creating and calling a Next.js API route.
+              </p>
+              <Button asChild className="w-full">
+                <Link href="/examples/backend-route">View Example</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <a href="https://github.com/kyritzb/lp-template/blob/main/tutorials/5)%20How%20to%20create%20a%20backend%20route%20in%20Next.js/README.md" target="_blank" rel="noopener noreferrer">
+                  Read Tutorial
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Tutorial 6: Saveable Profile (CRUD)</CardTitle>
+              <CardDescription>
+                Build a complete CRUD system for user profiles
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                This example shows a complete profile system with create, read, and update operations.
+              </p>
+              <Button asChild className="w-full">
+                <Link href="/examples/profile">View Example</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <a href="https://github.com/kyritzb/lp-template/blob/main/tutorials/6)%20Creating%20A%20Saveable%20Profile%20for%20each%20user/README.md" target="_blank" rel="noopener noreferrer">
+                  Read Tutorial
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Tutorial 7: Deploy to Vercel</CardTitle>
+              <CardDescription>
+                Push to GitHub and deploy your app to the internet
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Step-by-step guide to push your code to GitHub and deploy to Vercel.
+              </p>
+              <Button asChild className="w-full">
+                <Link href="/examples/deploy">View Example</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <a href="https://github.com/kyritzb/lp-template/blob/main/tutorials/7)%20Push%20to%20GitHub%20and%20Deploy%20to%20Vercel/README.md" target="_blank" rel="noopener noreferrer">
+                  Read Tutorial
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mt-8 text-center">
