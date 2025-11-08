@@ -13,6 +13,28 @@ export default {
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
+      boxShadow: {
+        glow: "0 0 45px rgba(0,255,133,0.22)",
+        neon: "0 0 110px rgba(0,255,133,0.28)",
+      },
+      backgroundImage: {
+        "aurora-grid": "radial-gradient(circle at center, rgba(0,255,133,0.14) 0%, rgba(0,255,133,0) 70%)",
+      },
+      keyframes: {
+        aurora: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
+        pulseGlow: {
+          "0%, 100%": { opacity: "0.45" },
+          "50%": { opacity: "0.9" },
+        },
+      },
+      animation: {
+        aurora: "aurora 14s ease-in-out infinite",
+        pulseGlow: "pulseGlow 6s ease-in-out infinite",
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",

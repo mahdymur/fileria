@@ -5,21 +5,21 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "border border-transparent bg-emerald-500 text-emerald-950 shadow-[0_0_18px_rgba(16,185,129,0.28)] hover:bg-emerald-400 hover:text-emerald-950 hover:shadow-[0_0_26px_rgba(52,211,153,0.35)]",
+          "border border-primary/30 bg-primary text-primary-foreground shadow-glow hover:border-primary/50 hover:bg-primary/90 hover:shadow-neon",
         destructive:
-          "border border-transparent bg-red-500 text-white shadow-sm hover:bg-red-400",
+          "border border-transparent bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-emerald-500/70 bg-transparent text-emerald-300 hover:bg-emerald-500 hover:text-emerald-950 hover:shadow-[0_0_22px_rgba(16,185,129,0.28)]",
+          "border border-primary/60 bg-transparent text-primary hover:bg-primary/10 hover:text-primary",
         secondary:
-          "border border-muted bg-[#111214] text-foreground hover:border-emerald-500/40 hover:text-emerald-200",
+          "border border-border bg-secondary text-secondary-foreground hover:border-primary/40 hover:bg-secondary/90",
         ghost:
-          "text-gray-300 hover:text-emerald-300 hover:bg-emerald-500/10",
-        link: "text-emerald-400 underline-offset-4 hover:text-emerald-300 hover:underline",
+          "text-foreground/80 hover:text-foreground hover:bg-primary/10",
+        link: "text-primary underline-offset-4 hover:text-primary/80 hover:underline",
       },
       size: {
         default: "h-10 px-5",

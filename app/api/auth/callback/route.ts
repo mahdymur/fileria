@@ -1,51 +1,40 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+// filepath: ./app/api/auth/callback/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-/**
- * Unified auth callback route.
- * Handles:
- * - Magic links / email confirmations (type=magiclink|signup with token_hash)
- * - Email OTP (type=recovery etc.)
- * - OAuth code exchange (code + state)
- * - Access / refresh token direct redirects (access_token param)
- * After establishing a session, redirects user to /app.
- */
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const redirectTo = url.searchParams.get("redirect_to") || "/app";
-  const type = url.searchParams.get("type");
-  const code = url.searchParams.get("code");
-  const tokenHash = url.searchParams.get("token_hash");
-  const accessToken = url.searchParams.get("access_token");
-  const refreshToken = url.searchParams.get("refresh_token");
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const supabase = await createClient();
-  let error: string | null = null;
+export async function GET(req: NextRequest) {
+  const requestUrl = new URL(req.url);
+  const code = requestUrl.searchParams.get('code');
+  const next = requestUrl.searchParams.get('next') || '/app';
 
-  try {
-    if (code) {
-      // OAuth flow
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      if (exchangeError) error = exchangeError.message;
-    } else if (accessToken && refreshToken) {
-      // Direct token redirect (rare but supported)
-      const { error: setError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-      if (setError) error = setError.message;
-    } else if (tokenHash && type) {
-      // Magic link / verify OTP
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        type: type as any,
-        token_hash: tokenHash,
-      });
-      if (verifyError) error = verifyError.message;
-    }
-  } catch (e) {
-    error = e instanceof Error ? e.message : "Unexpected auth error";
+  if (!code) {
+    return NextResponse.redirect(new URL('/auth/login?error=missing_code', requestUrl));
   }
 
-  const destination = error ? `/login?error=${encodeURIComponent(error)}` : redirectTo;
-  return NextResponse.redirect(new URL(destination, url.origin));
+  const res = NextResponse.redirect(new URL(next, requestUrl));
+  const supabase = createServerClient(url, anon, {
+    cookies: {
+      get(name: string) {
+        return req.cookies.get(name)?.value;
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        res.cookies.set(name, value, options);
+      },
+      remove(name: string, options: CookieOptions) {
+        res.cookies.set(name, '', { ...options, maxAge: 0 });
+      },
+    },
+  });
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) {
+    return NextResponse.redirect(
+      new URL(`/auth/login?error=${encodeURIComponent(error.message)}`, requestUrl)
+    );
+  }
+
+  return res;
 }

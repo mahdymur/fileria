@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
+import type { Session } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 /**
- * Especially important if using Fluid compute: Don't put this client in a
- * global variable. Always create a new client within each function when using
- * it.
+ * Server Supabase client.
+ * Always create per-request to avoid Fluid compute issues.
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -23,12 +23,24 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // Ignored in Server Components; middleware refreshes session.
           }
         },
       },
     },
   );
+}
+
+/**
+ * Retrieve the current user session on the server.
+ */
+export async function getServerSession(): Promise<{
+  session: Session | null;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  return { session };
 }

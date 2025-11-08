@@ -23,7 +23,7 @@ export default function AppDashboardPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-4xl flex-col gap-8 px-4 py-20">
       <header className="space-y-3">
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl dark:text-slate-100">
+        <h1 className="text-4xl font-semibold tracking-tight text-transparent sm:text-5xl bg-gradient-to-r from-primary via-[#38ffa5] to-primary/80 bg-clip-text drop-shadow-[0_0_35px_rgba(0,255,133,0.25)]">
           Welcome to Fileria.
         </h1>
         <p className="text-lg text-muted-foreground">
@@ -31,8 +31,8 @@ export default function AppDashboardPage() {
         </p>
       </header>
 
-      <div className="rounded-3xl border border-dashed border-slate-300 bg-white/40 p-8 backdrop-blur dark:border-slate-700 dark:bg-slate-900/50">
-        <label htmlFor="workspace-search" className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+      <div className="rounded-3xl border border-primary/25 bg-secondary/80 p-8 shadow-[0_0_80px_rgba(0,255,133,0.12)] backdrop-blur">
+        <label htmlFor="workspace-search" className="block text-sm font-medium text-muted-foreground">
           Quick search
         </label>
         <Input
@@ -40,7 +40,7 @@ export default function AppDashboardPage() {
           type="search"
           disabled
           placeholder="Search SEC filings…"
-          className="mt-3 h-12 cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+          className="mt-3 h-12 cursor-not-allowed border-dashed border-primary/40 text-muted-foreground/80"
         />
         <p className="mt-4 text-sm text-muted-foreground">
           Soon, you&apos;ll be able to ask natural questions across your filings with citation-backed answers.

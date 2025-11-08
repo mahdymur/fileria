@@ -55,9 +55,9 @@ export async function updateSession(request: NextRequest) {
   );
 
   if (isProtectedRoute && !user) {
-    // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/auth/login";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
