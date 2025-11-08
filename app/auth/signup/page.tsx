@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/login-form";
+import { SignUpForm } from "@/components/sign-up-form";
 import { CheckCircle2 } from "lucide-react";
 
 export default function Page() {
@@ -11,22 +11,22 @@ export default function Page() {
       <div className="relative z-10 grid w-full max-w-6xl items-center gap-16 lg:grid-cols-2">
         <div className="space-y-8 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-emerald-200">
-            Welcome back
+            Create your account
           </div>
           <div className="space-y-4">
             <h1 className="text-4xl font-semibold text-emerald-50 sm:text-5xl lg:text-6xl">
-              Sign in to keep your research flowing.
+              Start organizing your research today.
             </h1>
             <p className="max-w-xl text-base text-muted-foreground lg:text-lg">
-              Pick up exactly where you left off. Resume saved workspaces, revisit cited answers, and stay in sync with your team’s latest notes.
+              One secure space for saved experiments, annotated sources, and collaborative follow-ups. Your progress never gets lost.
             </p>
           </div>
           <div className="grid gap-4 text-left sm:grid-cols-2">
             {[
-              "Instant access to saved follow-ups",
-              "Secure Supabase authentication",
-              "Export citations in one click",
-              "Live monitoring on your dashboard",
+              "Encrypted Supabase sessions",
+              "Personalizable profile page",
+              "Future team workspace access",
+              "Fast export & sharing",
             ].map((feature) => (
               <div
                 key={feature}
@@ -40,9 +40,9 @@ export default function Page() {
         </div>
 
         <div className="mx-auto w-full max-w-md lg:justify-self-end">
-          <LoginForm />
+          <SignUpForm />
           <p className="mt-6 text-center text-xs uppercase tracking-[0.28em] text-muted-foreground">
-            Need help? <a href="mailto:support@fileria.ai" className="text-emerald-300 hover:text-emerald-200">Contact support</a>
+            Questions? <a href="mailto:support@fileria.ai" className="text-emerald-300 hover:text-emerald-200">Reach out</a>
           </p>
         </div>
       </div>

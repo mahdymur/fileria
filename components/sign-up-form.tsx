@@ -44,7 +44,7 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/app`,
         },
       });
       if (error) throw error;
@@ -58,14 +58,16 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+      <Card className="border-emerald-500/20 shadow-[0_0_140px_rgba(16,185,129,0.18)]">
+        <CardHeader className="space-y-4">
+          <CardTitle className="text-3xl text-emerald-50">Sign up</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Create a new account and get instant access to Fileria.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
+        <CardContent className="space-y-6">
+          <form onSubmit={handleSignUp} className="space-y-6">
+            <div className="space-y-5">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -101,14 +103,14 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error ? <p className="text-sm text-red-400">{error}</p> : null}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating an account..." : "Sign up"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
+            <div className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
+              <Link href="/login" className="text-emerald-300 underline-offset-4 hover:text-emerald-200">
                 Login
               </Link>
             </div>

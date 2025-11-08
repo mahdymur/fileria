@@ -47,30 +47,30 @@ export function ForgotPasswordForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {success ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+        <Card className="border-emerald-500/20 shadow-[0_0_140px_rgba(16,185,129,0.18)]">
+          <CardHeader className="space-y-4">
+            <CardTitle className="text-3xl text-emerald-50">Check your email</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              Password reset instructions sent.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <p>
+              If you registered using your email and password, you will receive a password reset email.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-            <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
+        <Card className="border-emerald-500/20 shadow-[0_0_140px_rgba(16,185,129,0.18)]">
+          <CardHeader className="space-y-4">
+            <CardTitle className="text-3xl text-emerald-50">Reset your password</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              Type in your email and we&apos;ll send you a link to reset your password.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword}>
-              <div className="flex flex-col gap-6">
+          <CardContent className="space-y-6">
+            <form onSubmit={handleForgotPassword} className="space-y-6">
+              <div className="space-y-5">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -82,17 +82,14 @@ export function ForgotPasswordForm({
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
+                {error ? <p className="text-sm text-red-400">{error}</p> : null}
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Sending..." : "Send reset email"}
                 </Button>
               </div>
-              <div className="mt-4 text-center text-sm">
+              <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4"
-                >
+                <Link href="/auth/login" className="text-emerald-300 underline-offset-4 hover:text-emerald-200">
                   Login
                 </Link>
               </div>

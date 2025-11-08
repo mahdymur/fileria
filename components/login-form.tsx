@@ -39,7 +39,7 @@ export function LoginForm({
       });
       if (error) throw error;
       // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      router.push("/app");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -49,16 +49,16 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
+      <Card className="border-emerald-500/20 shadow-[0_0_140px_rgba(16,185,129,0.18)]">
+        <CardHeader className="space-y-4">
+          <CardTitle className="text-3xl text-emerald-50">Login</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Enter your email below to log into your account.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin}>
-            <div className="flex flex-col gap-6">
+        <CardContent className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-5">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -75,7 +75,7 @@ export function LoginForm({
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    className="ml-auto inline-block text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300 underline-offset-4 hover:text-emerald-200"
                   >
                     Forgot your password?
                   </Link>
@@ -88,17 +88,14 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error ? <p className="text-sm text-red-400">{error}</p> : null}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
+            <div className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an account? {" "}
+              <Link href="/signup" className="text-emerald-300 underline-offset-4 hover:text-emerald-200">
                 Sign up
               </Link>
             </div>

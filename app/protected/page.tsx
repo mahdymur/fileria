@@ -13,22 +13,21 @@ export default async function ProtectedPage() {
   }
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
+    <div className="flex w-full flex-1 flex-col gap-12">
       <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated
-          user
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-[#050708]/85 px-5 py-3 text-sm text-muted-foreground shadow-[0_0_60px_rgba(16,185,129,0.18)]">
+          <InfoIcon size="16" strokeWidth={2} className="text-emerald-300" />
+          This is a protected page that you can only see as an authenticated user.
         </div>
       </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
+      <div className="flex flex-col items-start gap-4">
+        <h2 className="text-2xl font-semibold text-emerald-50">Your user details</h2>
+        <pre className="max-h-48 w-full overflow-auto rounded-xl border border-emerald-500/15 bg-[#080a0b] p-4 text-xs text-emerald-200/80 shadow-[0_0_45px_rgba(16,185,129,0.12)]">
           {JSON.stringify(data.claims, null, 2)}
         </pre>
       </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-emerald-50">Next steps</h2>
         <FetchDataSteps />
       </div>
     </div>
