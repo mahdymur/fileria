@@ -1,189 +1,104 @@
-# Next.js Supabase Starter Template
+ # Fileria
 
-Welcome! This is a starter template for building web applications with Next.js and Supabase. If you're new to coding, don't worry - this guide will walk you through everything step by step.
+Fileria is a Next.js + Supabase application built for frictionless finance intelligence. Authenticated users can upload and query their own financial filings (PDF or text reports), and the system is designed as a foundation for Retrieval-Augmented Generation (RAG).
 
-## What is This Template?
+## Stack
 
-This template gives you a complete starting point for building a full web application that includes:
-- **User authentication** (sign up, login, password reset)
-- **Protected pages** (pages only logged-in users can see)
-- Supabase database connection (database so your app can save stuff)
-- Vercel Hosting (So your app can be on the public internet)
+- Next.js App Router (server components + edge-ready API routes)
+- Supabase (PostgreSQL, Auth, RLS, Storage)
+- Tailwind CSS with a custom neon-dark theme
+- Roadmap: vector search (pgvector or hosted), embeddings, LLM orchestration
 
-Think of it as a foundation you can build upon to create your own web application.
+## Current Features
 
----
+- Email/password authentication with protected `/app/*` routes
+- Row-Level Security: users only access their own filings
+- Filings CRUD through `/api/filings`
+- Duplicate email guard during sign-up
+- Neon-themed UI for buttons, inputs, cards, and landing sections
 
-## Step 1) Initial setup
+## RAG Roadmap
 
-Before you begin, you'll need to set up accounts and install software. Follow these steps in order:
+1. **Ingest filings**
+	- Upload PDFs/text to Supabase Storage
+	- Extract and normalize text
+	- Chunk content (semantic or fixed overlapping windows)
 
-### 1. Create Supabase Account (Free)
+2. **Embed & store**
+	- Select an embedding model (OpenAI, Hugging Face, local)
+	- Store vectors (pgvector or external vector DB)
+	- Track metadata: `user_id`, `filing_id`, chunk indexes, token counts
 
-**What is Supabase?** Supabase handles user authentication (login/sign up) and can store your data. It's like having a backend server without needing to build one yourself.
+3. **Maintain index**
+	- Upsert on filing edits, handle soft deletes
+	- Schedule re-embedding for new models or schema tweaks
 
-**How to get an account:**
-1. Go to [supabase.com](https://supabase.com/)
-2. Click "Start your project" or "Sign up"
-3. Create a free account (you can use your GitHub account to sign up faster)
-4. Once logged in, click "New Project"
-5. Fill in your project details:
-   - **Name**: Give your project a name (like "my-first-app")
-   - **Database Password**: Create a strong password (save this somewhere safe!)
-   - **Region**: Choose the closest region to you
-6. Click "Create new project"
-7. Wait 2-3 minutes for your project to be set up
+4. **Retrieve**
+	- Hybrid search (vector similarity + keyword/tsvector)
+	- Blend scores (reciprocal rank or weighted sum)
+	- Enforce per-user filtering before returning results
 
-### 2. Create Free Vercel Account (Free)
+5. **Generate answers**
+	- Build prompts with instructions + top-N chunks
+	- Reduce hallucination via citations and confidence hints
+	- Cache responses keyed by query + chunk IDs + embedding version
 
-**What is Vercel?** Vercel is a platform that hosts (puts your website on the internet) so other people can visit it. It's free for personal projects and works perfectly with Next.js.
+6. **Evaluate quality**
+	- Create a benchmark question set
+	- Monitor accuracy, latency, and cost per answer
+	- Track drift when models or embeddings update
 
-**How to get an account:**
-1. Go to [vercel.com](https://vercel.com/)
-2. Click "Sign up" or "Start Deploying"
-3. Create a free account (you can sign up with GitHub, GitLab, or Bitbucket - this makes deployment easier later!)
-4. Verify your email if prompted
-5. You're done! You'll use this account later to put your website online.
-   
-### 3. Install Node.js and NPM on Your Machine
+7. **Secure & audit**
+	- RLS on raw text, chunks, and embeddings
+	- Optional encryption at rest for sensitive filings
+	- Log retrieval + generation events for compliance
 
-**What is Node.js?** Node.js is a program that lets you run JavaScript on your computer. It also comes with npm (Node Package Manager), which helps you install the tools this project needs.
+## Suggested Schema (current + future)
 
-**How to install:**
-1. Go to [nodejs.org](https://nodejs.org/)
-2. Download the version labeled "LTS" (Long Term Support) - this is the most stable version
-3. Run the installer and follow the instructions
-4. Restart your computer after installation
-
-**How to check if it's installed:**
-- Open your terminal (on Mac: press `Cmd + Space`, type "Terminal", press Enter)
-- On Windows: press `Windows Key + R`, type "cmd", press Enter
-- Type these commands and press Enter after each:
-  ```bash
-  node --version
-  npm --version
-  ```
-- You should see version numbers like `v20.10.0` and `10.2.3`. If you see errors, Node.js isn't installed correctly.
-
-### 6. Install Cursor and Sign Up with Student Account
-
-**What is Cursor?** Cursor is a code editor (like Microsoft Word, but for code) that has built-in AI assistance. It's perfect for beginners because it can help you write code and answer questions.
-
-**How to install:**
-1. Go to [cursor.sh](https://cursor.sh/)
-2. Click "Download" or "Get Started"
-3. Download the version for your operating system (Windows, Mac, or Linux)
-4. Run the installer and follow the instructions
-5. Open Cursor when installation is complete
-
-**How to sign up with student account:**
-1. Open Cursor
-2. Click "Sign up" or "Get started"
-3. Look for an option to sign up as a student (usually says "Student" or "Education")
-4. Sign up using your student email address (the one from your school)
-5. Verify your student status if prompted
-6. **Note:** Student accounts often get free or discounted access to premium features!
-
-**Alternative:** If you're not a student, you can still use Cursor with a free account, but some features might be limited.
-
-### 7. Install Git
-
-**What is Git?** Git is a tool that helps you track changes to your code and collaborate with others. Think of it like a time machine for your code - you can go back to earlier versions if something breaks.
-
-**How to install:**
-
-**On Mac:**
-- Git usually comes pre-installed! Check by opening Terminal and typing `git --version`
-- If it's not installed, you can install it by installing Xcode Command Line Tools:
-  ```bash
-  xcode-select --install
-  ```
-
-**On Windows:**
-1. Go to [git-scm.com](https://git-scm.com/)
-2. Click "Download for Windows"
-3. Run the installer
-4. During installation, keep all the default options (just click "Next" through everything)
-5. When it's done, restart your computer
-
-**On Linux:**
-- Open your terminal and run:
-  ```bash
-  sudo apt update
-  sudo apt install git
-  ```
-- Or use your distribution's package manager
-
-**How to check if it's installed:**
-- Open your terminal
-- Type this command and press Enter:
-  ```bash
-  git --version
-  ```
-- You should see something like `git version 2.42.0`. If you see an error, Git isn't installed correctly.
-
-**Set up Git (first time only):**
-After installing Git, you should tell it who you are. Run these commands in your terminal (replace with your name and email):
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
+```
+users(id, email, created_at)
+filings(id, user_id, title, content, created_at)
+-- planned:
+filing_chunks(id, filing_id, user_id, chunk_text, embedding vector, token_count)
 ```
 
----
+## Local Development
 
-## Step 2) Check if your laptop is set up and ready to code:
+1. `npm install`
+2. Fill `.env.local` with
+	- `NEXT_PUBLIC_SUPABASE_URL`
+	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+	- `SUPABASE_SERVICE_ROLE_KEY` (server-only, optional)
+3. `npm run dev`
+4. Visit `http://localhost:3000`
 
-<div align="center">
-  
-[![Watch the video](https://img.youtube.com/vi/kSeLX5NcIOo/0.jpg)](https://www.youtube.com/watch?v=CW8MT0-lWas)
+## Deployment (Preview / Staging)
 
-</div>
+1. Push to GitHub `main`
+2. Vercel project pulls repo; add env vars there:
+	- `NEXT_PUBLIC_SUPABASE_URL`
+	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+	- `SUPABASE_SERVICE_ROLE_KEY` (if server tasks need it)
+3. Update Supabase Auth → Redirect URLs with the Vercel domain
+4. Redeploy and verify auth + `/api/filings`
 
-📺 **[Watch on YouTube](https://youtu.be/kSeLX5NcIOo)**
+## Testing Checklist
 
----
+- Sign up, confirm, log in, log out
+- `/app` redirects unauthenticated users to `/auth/login`
+- Authenticated user can `POST` and `GET` `/api/filings`
+- Another user cannot view filings (RLS enforced)
+- UI matches neon theme across landing and dashboard
 
-## Step 3) Get the Code on your laptop, and set up the template:
+## Next Steps Before Production
 
-<div align="center">
-  
-[![Watch the video](https://img.youtube.com/vi/CW8MT0-lWas/0.jpg)](https://www.youtube.com/watch?v=CW8MT0-lWas)
+- Add file uploads + text parsing pipeline
+- Create embeddings + retrieval endpoints
+- Build RAG answer service with citations
+- Add monitoring and alerting for auth/API usage
+- Automate database migrations
 
-</div>
+## License
 
-📺 **[Watch on YouTube](https://youtu.be/CW8MT0-lWas)**
-
-
-## Common Problems and Solutions
-
-### Problem: "Command not found" or "npm is not recognized"
-
-**Solution:** Node.js isn't installed or isn't in your PATH. Go back to "What You'll Need Before Starting" and make sure Node.js is installed correctly.
-
-### Problem: Website shows "Environment variables are missing"
-
-**Solution:** 
-- Make sure you created `.env.local` (not `.env.local.txt`)
-- Make sure your file is in the root folder (same folder as `package.json`)
-- Check that you copied your Supabase keys correctly (no extra spaces or quotes)
-- After fixing the file, stop your server (`Ctrl+C`) and restart it (`npm run dev`)
-
-### Problem: "Port 3000 is already in use"
-
-**Solution:** Another program is using port 3000. Either:
-- Close the other program, or
-- Stop any other development servers you have running
-
-### Problem: "Cannot find module" errors
-
-**Solution:** 
-- Make sure you ran `npm install` successfully
-- Try deleting the `node_modules` folder and running `npm install` again
-- Make sure you're in the correct project folder
-
-### Problem: Supabase authentication not working
-
-**Solution:**
-- Double-check your `.env.local` file has the correct values
-- Make sure your Supabase project is active (not paused)
-- Check that you copied the "anon public" key, not the "service_role" key (service_role should stay secret!)
+Proprietary (update if you plan to open source).
+ 
