@@ -16,7 +16,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("filings")
-    .select("id, title, content, created_at")
+    .select(
+      "id, title, content, storage_path, original_filename, content_type, ingestion_status, file_size, extracted_at, created_at",
+    )
     .eq("user_id", session.user.id)
     .order("created_at", { ascending: false });
 
@@ -80,4 +82,66 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ filing: data }, { status: 201 });
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 },
+    );
+  }
+
+  const targetId = new URL(request.url).searchParams.get("id");
+
+  if (!targetId) {
+    return NextResponse.json(
+      { error: "Missing filing id" },
+      { status: 400 },
+    );
+  }
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("filings")
+    .select("id, storage_path")
+    .eq("id", targetId)
+    .eq("user_id", session.user.id)
+    .single();
+
+  if (fetchError) {
+    const status = fetchError.code === "PGRST116" ? 404 : 500;
+    return NextResponse.json(
+      { error: status === 404 ? "Filing not found" : fetchError.message },
+      { status },
+    );
+  }
+
+  if (existing?.storage_path) {
+    await supabase.storage
+      .from("filings")
+      .remove([existing.storage_path])
+      .catch(() => {
+        // Non-fatal: leave orphan cleanup to scheduled job/logging
+      });
+  }
+
+  const { error } = await supabase
+    .from("filings")
+    .delete()
+    .eq("id", targetId)
+    .eq("user_id", session.user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 },
+    );
+  }
+
+  return new NextResponse(null, { status: 204 });
 }

@@ -47,9 +47,9 @@ export function ForgotPasswordForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {success ? (
-        <Card className="border-emerald-500/20 shadow-[0_0_140px_rgba(16,185,129,0.18)]">
+        <Card className="border-primary/25 shadow-[0_0_140px_rgba(0,255,133,0.18)]">
           <CardHeader className="space-y-4">
-            <CardTitle className="text-3xl text-emerald-50">Check your email</CardTitle>
+            <CardTitle className="text-3xl text-foreground">Check your email</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
               Password reset instructions sent.
             </CardDescription>
@@ -61,9 +61,9 @@ export function ForgotPasswordForm({
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-emerald-500/20 shadow-[0_0_140px_rgba(16,185,129,0.18)]">
+        <Card className="border-primary/25 shadow-[0_0_140px_rgba(0,255,133,0.18)]">
           <CardHeader className="space-y-4">
-            <CardTitle className="text-3xl text-emerald-50">Reset your password</CardTitle>
+            <CardTitle className="text-3xl text-foreground">Reset your password</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
               Type in your email and we&apos;ll send you a link to reset your password.
             </CardDescription>
@@ -89,7 +89,7 @@ export function ForgotPasswordForm({
               </div>
               <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/auth/login" className="text-emerald-300 underline-offset-4 hover:text-emerald-200">
+                <Link href="/auth/login" className="text-primary underline-offset-4 hover:text-primary/80">
                   Login
                 </Link>
               </div>
