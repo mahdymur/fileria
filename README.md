@@ -1,4 +1,4 @@
- # Fileria
+# Fileria
 
 Fileria is a Next.js + Supabase application built for frictionless finance intelligence. Authenticated users can upload and query their own financial filings (PDF or text reports), and the system is designed as a foundation for Retrieval-Augmented Generation (RAG).
 
