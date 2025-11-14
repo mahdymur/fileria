@@ -28,7 +28,7 @@ Fileria is a Next.js + Supabase application built for frictionless finance intel
 	- Chunk content (semantic or fixed overlapping windows)
 
 2. **Embed & store**
-	- Select an embedding model (Groq-hosted, Hugging Face, local)
+	- Select an embedding model (Cohere-hosted, Hugging Face, local)
 	- Store vectors (pgvector or external vector DB)
 	- Track metadata: `user_id`, `filing_id`, chunk indexes, token counts
 	- Maintain an index (`ivfflat` with cosine distance) for fast retrieval
@@ -135,22 +135,23 @@ After a successful `/api/filings/upload`, the server immediately kicks off an in
 
 1. **Extract:** download the raw object from the private `filings` bucket with the service-role key, parse PDFs via `pdf-parse` (or read plain text), and persist the normalized text plus `extracted_at`.
 2. **Chunk:** split the document into overlapping windows (defaults: 1,200 characters with 200-character overlap, configurable via `RAG_CHUNK_SIZE` / `RAG_CHUNK_OVERLAP`).
-3. **Embed:** batch the chunks through the Groq embeddings API (defaults to `nomic-embed-text`, override with `GROQ_EMBEDDING_MODEL`). Each embedding is inserted into `filing_chunks` with the user + filing IDs.
+3. **Embed:** batch the chunks through the Cohere embeddings API (defaults to `embed-english-v3.0`, override with `COHERE_EMBEDDING_MODEL`). Each embedding is inserted into `filing_chunks` with the user + filing IDs.
 4. **Status updates:** `filings.ingestion_status` progresses through `uploaded → extracting → chunked → embedding → ready`, or `failed` with an error message if anything throws. `chunked` means text + chunk metadata is stored and waiting for embeddings.
 
-5. **Embedding job reruns:** `POST /api/filings/embed` (or `GET /api/filings/embed?filingId=...`) replays the embedding-only step for filings that already have chunk rows but `embedding IS NULL`. This is helpful if the Groq key was missing during ingestion or you want to re-embed with a new model.
+5. **Embedding job reruns:** `POST /api/filings/embed` (or `GET /api/filings/embed?filingId=...`) replays the embedding-only step for filings that already have chunk rows but `embedding IS NULL`. This is helpful if the Cohere key was missing during ingestion or you want to re-embed with a new model.
 
 ### Re-running ingestion
 
 - **API:** POST `/api/filings/ingest` with `{ "filingId": "uuid" }` while authenticated as the filing owner. This is useful after fixing extraction bugs or changing chunk settings.
-- **Embeddings only:** `POST /api/filings/embed` with `{ "filingId": "uuid" }` or `GET /api/filings/embed?filingId=uuid` once a filing is `chunked`. The endpoint batches up to 90 chunks per Groq call.
+- **Embeddings only:** `POST /api/filings/embed` with `{ "filingId": "uuid" }` or `GET /api/filings/embed?filingId=uuid` once a filing is `chunked`. The endpoint batches up to 90 chunks per request; the Cohere helper will automatically split further to stay within the 96-text API limit if needed.
 - **CLI:** `npm run ingest -- <filingId>` loads `.env.local`, invokes the same pipeline, and logs a summary. Ideal for local debugging or backfills.
 
 ### Required env vars
 
 - `SUPABASE_SERVICE_ROLE_KEY` – grants secure server-side access to Storage + tables during ingestion.
-- `GROQ_API_KEY` – used for embeddings (add to `.env.local` + Vercel → Project → Settings → Environment Variables).
-- Optional tuning knobs: `GROQ_EMBEDDING_MODEL` (defaults to `nomic-embed-text`), `RAG_CHUNK_SIZE`, `RAG_CHUNK_OVERLAP`, `RAG_EMBED_BATCH_SIZE`, `RAG_TOP_K` (max retrieved chunks), `RAG_MIN_SIMILARITY`.
+- `COHERE_API_KEY` – used for embeddings (add to `.env.local` + Vercel → Project → Settings → Environment Variables).
+- `GROQ_API_KEY` – still required for chat generation.
+- Optional tuning knobs: `COHERE_EMBEDDING_MODEL` (defaults to `embed-english-v3.0`), `COHERE_EMBED_BATCH_SIZE` (caps at 96), `RAG_CHUNK_SIZE`, `RAG_CHUNK_OVERLAP`, `RAG_EMBED_BATCH_SIZE`, `RAG_TOP_K` (max retrieved chunks), `RAG_MIN_SIMILARITY`.
 
 ### Ingestion dashboard UX
 
@@ -174,8 +175,9 @@ After a successful `/api/filings/upload`, the server immediately kicks off an in
 	 - `NEXT_PUBLIC_SUPABASE_URL`
 	 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 	 - `SUPABASE_SERVICE_ROLE_KEY` (server-only, required for ingestion)
+	 - `COHERE_API_KEY`
 	 - `GROQ_API_KEY`
-	 - Optional overrides: `GROQ_EMBEDDING_MODEL`, `RAG_CHUNK_SIZE`, `RAG_CHUNK_OVERLAP`, `RAG_EMBED_BATCH_SIZE`
+	 - Optional overrides: `COHERE_EMBEDDING_MODEL`, `COHERE_EMBED_BATCH_SIZE`, `RAG_CHUNK_SIZE`, `RAG_CHUNK_OVERLAP`, `RAG_EMBED_BATCH_SIZE`
 3. `npm run dev`
 4. Visit `http://localhost:3000`
 
@@ -186,6 +188,8 @@ After a successful `/api/filings/upload`, the server immediately kicks off an in
 	- `NEXT_PUBLIC_SUPABASE_URL`
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 	- `SUPABASE_SERVICE_ROLE_KEY` (if server tasks need it)
+	- `COHERE_API_KEY`
+	- `GROQ_API_KEY`
 3. Update Supabase Auth → Redirect URLs with the Vercel domain
 4. Redeploy and verify auth + `/api/filings`
 
@@ -198,7 +202,7 @@ After a successful `/api/filings/upload`, the server immediately kicks off an in
 | DELETE | `/api/filings?id=:id`     | Delete a filing and its stored artifact |
 | POST   | `/api/filings/upload`     | Upload a PDF or `.txt` file; stores object in Supabase Storage and inserts a pending filing row |
 | POST   | `/api/filings/ingest`     | Re-run the ingestion pipeline for a filing the current user owns |
-| GET/POST | `/api/filings/embed`    | Batch missing chunk embeddings via Groq; expects `filingId` in JSON or query string |
+| GET/POST | `/api/filings/embed`    | Batch missing chunk embeddings via Cohere; expects `filingId` in JSON or query string |
 | POST   | `/api/ask`                | RAG query endpoint. Takes a question + optional filters, performs vector search, and answers with citations |
 | GET    | `/api/examples/profile`   | Fetch the authenticated profile record |
 | POST   | `/api/examples/profile`   | Create/update the current profile |
@@ -218,7 +222,7 @@ POST /api/ask
 }
 ```
 
-The route authenticates the user, embeds the question with Groq, runs a pgvector similarity search (respecting the optional filters), and calls the Groq chat model with the top chunks. The response includes an `answer`, chunk-level `citations`, and a `debug` payload showing latency + model info.
+The route authenticates the user, embeds the question with Cohere, runs a pgvector similarity search (respecting the optional filters), and calls the Groq chat model with the top chunks. The response includes an `answer`, chunk-level `citations`, and a `debug` payload showing latency + model info.
 
 ## Testing Checklist
 

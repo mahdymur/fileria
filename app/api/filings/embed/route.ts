@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { embedFilingChunks } from "@/lib/ingestion/pipeline";
+import { runCohereEmbeddingJob } from "@/lib/rag/embedding";
 
 export const runtime = "nodejs";
 
@@ -36,13 +36,10 @@ async function handleEmbedRequest(request: NextRequest, body: { filingId?: strin
     return NextResponse.json({ error: "Filing not found" }, { status: 404 });
   }
 
-  if (filing.ingestion_status === "ready") {
-    return NextResponse.json({ status: "ready" }, { status: 200 });
-  }
-
   try {
-    const result = await embedFilingChunks(filingId);
-    return NextResponse.json({ status: "embedding", result }, { status: 200 });
+    const result = await runCohereEmbeddingJob({ filingId, userId: session.user.id });
+    const status = result.remaining === 0 ? "ready" : "embedding";
+    return NextResponse.json({ status, result }, { status: 200 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Embedding failed";
     return NextResponse.json({ error: message }, { status: 500 });

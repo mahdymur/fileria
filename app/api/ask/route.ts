@@ -7,6 +7,7 @@ import {
   embedQuestion,
   answerWithChunks,
   buildCitations,
+  countEmbeddedChunksForUser,
   type AskFilters,
 } from "@/lib/rag/query";
 
@@ -40,6 +41,18 @@ export async function POST(request: NextRequest) {
   const supabaseAdmin = createAdminClient();
 
   try {
+    const embeddedChunkCount = await countEmbeddedChunksForUser(supabaseAdmin, session.user.id);
+
+    if (embeddedChunkCount === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "No embedded filings found. Upload a filing, run embeddings, and try asking your question again.",
+        },
+        { status: 400 },
+      );
+    }
+
     const questionEmbedding = await embedQuestion(question);
     const normalizedFilters = normalizeFilters(payload?.filters);
     const chunks = await vectorSearchChunks(supabaseAdmin, {
@@ -69,6 +82,7 @@ export async function POST(request: NextRequest) {
       debug: {
         totalChunksScanned: chunks.length,
         model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+        embeddedChunkCount,
         latencyMs,
       },
     });

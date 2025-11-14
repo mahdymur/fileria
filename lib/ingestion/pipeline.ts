@@ -1,15 +1,18 @@
 import { extname } from "node:path";
 import { Buffer } from "node:buffer";
+import { createCanvas } from "@napi-rs/canvas";
+import type { Canvas } from "@napi-rs/canvas";
+import Tesseract from "tesseract.js";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist/types/src/pdf";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { embedTexts, getGroqEmbeddingModel } from "@/lib/embeddings/groq";
+import { runCohereEmbeddingJob } from "@/lib/rag/embedding";
 
 // Chunking defaults favor ~300 tokens per chunk to keep prompts small while preserving context.
 // They can be tuned via env vars without redeploying.
 const CHUNK_SIZE = Number(process.env.RAG_CHUNK_SIZE ?? 1200);
 const CHUNK_OVERLAP = Number(process.env.RAG_CHUNK_OVERLAP ?? 200);
-const MAX_CHUNKS_PER_EMBED_REQUEST = Number(process.env.RAG_EMBED_BATCH_SIZE ?? 90);
-const DEFAULT_EMBEDDING_MODEL = getGroqEmbeddingModel();
 
 type FilingRecord = {
   id: string;
@@ -34,13 +37,16 @@ type PersistableChunk = {
   tokenCount: number;
 };
 
-type PendingChunkRecord = {
-  id: string;
-  chunk_index: number;
-  content: string;
-};
 
-type PdfParseFn = (data: Buffer) => Promise<{ text: string; numpages?: number | undefined }>;
+type PdfTextItem = { str?: string };
+const PDF_BINARY_MARKER_REGEX = /(endobj|endstream|%PDF-|\bxref\b|\/ProcSet)/i;
+const OCR_ENABLED = process.env.RAG_ENABLE_PDF_OCR !== "false";
+const OCR_MAX_PAGES = Number(process.env.RAG_PDF_OCR_MAX_PAGES ?? 25);
+const OCR_RENDER_SCALE = Number(process.env.RAG_PDF_OCR_SCALE ?? 2);
+type WorkerOptionsParam = NonNullable<Parameters<typeof Tesseract.createWorker>[2]>;
+type TesseractLoggerMessage = WorkerOptionsParam extends { logger?: (message: infer M) => void } ? M : unknown;
+type TesseractWorker = Awaited<ReturnType<typeof Tesseract.createWorker>>;
+let ocrWorkerPromise: Promise<TesseractWorker> | null = null;
 
 export async function ingestFiling(filingId: string) {
   const supabaseAdmin = createAdminClient();
@@ -67,6 +73,8 @@ export async function ingestFiling(filingId: string) {
       fileBuffer,
       filing.content_type ?? filing.original_filename,
     );
+
+    guardAgainstBinaryGarbage(text);
 
     if (!text?.trim()) {
       throw new Error("Extracted text is empty; check the source document");
@@ -99,7 +107,11 @@ export async function ingestFiling(filingId: string) {
       persistableChunks,
     );
 
-    const { embedded } = await embedPendingChunksForFiling(supabaseAdmin, filing);
+    const { embedded } = await runCohereEmbeddingJob({
+      filingId: filing.id,
+      userId: filing.user_id,
+      supabaseAdmin,
+    });
 
     return {
       status: "success" as const,
@@ -148,30 +160,188 @@ async function extractText(buffer: Buffer, hint?: string | null): Promise<{ text
   const isPdf = mime.includes("pdf") || extension === ".pdf";
 
   if (isPdf) {
-    const pdfModule = (await import("pdf-parse")) as { default?: PdfParseFn } | PdfParseFn;
-    const pdfParseExport = typeof pdfModule === "function" ? pdfModule : pdfModule.default;
-
-    if (!pdfParseExport) {
-      throw new Error("Failed to load pdf-parse");
-    }
-
-    const parsed = await pdfParseExport(buffer);
-    return {
-      text: parsed.text ?? "",
-      pageCount: parsed.numpages ?? null,
-    };
+    return extractPdfText(buffer);
   }
 
-  return { text: buffer.toString("utf-8"), pageCount: null };
+  return { text: sanitizeExtractedText(buffer.toString("utf-8")), pageCount: null };
+}
+
+async function extractPdfText(buffer: Buffer): Promise<{ text: string; pageCount: number | null }> {
+  try {
+    type DocumentParams = Parameters<typeof pdfjsLib.getDocument>[0];
+    const documentParams: DocumentParams & { disableWorker?: boolean } = {
+      data: new Uint8Array(buffer),
+      useSystemFonts: true,
+      isEvalSupported: false,
+      ownerDocument: undefined,
+    };
+    documentParams.disableWorker = true;
+    const loadingTask = pdfjsLib.getDocument(documentParams);
+    const pdf = await loadingTask.promise;
+    const textual = await extractPdfTextViaSelectableContent(pdf);
+    if (textual.trim()) {
+      return {
+        text: sanitizeExtractedText(textual),
+        pageCount: pdf.numPages,
+      };
+    }
+
+    if (OCR_ENABLED) {
+      const ocrText = await extractPdfTextWithOcr(pdf);
+      if (ocrText.trim()) {
+        return {
+          text: sanitizeExtractedText(ocrText),
+          pageCount: pdf.numPages,
+        };
+      }
+    } else {
+      console.warn(
+        "[ingestion] PDF contains no selectable text; set RAG_ENABLE_PDF_OCR=true to enable image OCR fallback",
+      );
+    }
+
+    throw new Error("PDF extraction yielded no selectable text");
+  } catch (error) {
+    console.error("[ingestion] pdfjs-dist parsing failed", error);
+    throw new Error("Failed to extract text from PDF document");
+  }
+}
+
+async function extractPdfTextViaSelectableContent(pdf: PDFDocumentProxy): Promise<string> {
+  let fullText = "";
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = (textContent.items as PdfTextItem[])
+      .map((item) => item.str ?? "")
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (pageText) {
+      fullText += (fullText ? "\n" : "") + pageText;
+    }
+  }
+
+  return fullText;
+}
+
+async function extractPdfTextWithOcr(pdf: PDFDocumentProxy): Promise<string> {
+  const ocrTexts: string[] = [];
+  const maxPages = Number.isFinite(OCR_MAX_PAGES) && OCR_MAX_PAGES > 0 ? OCR_MAX_PAGES : pdf.numPages;
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    if (pageNum > maxPages) {
+      console.warn(
+        `[ingestion] OCR page limit (${maxPages}) reached; remaining ${pdf.numPages - maxPages} pages will be skipped`,
+      );
+      break;
+    }
+
+    const page = await pdf.getPage(pageNum);
+    const imageBuffer = await renderPageToImageBuffer(page, OCR_RENDER_SCALE);
+    const recognized = await recognizeImageBuffer(imageBuffer);
+    const trimmed = recognized.replace(/\s+/g, " ").trim();
+    if (trimmed) {
+      ocrTexts.push(trimmed);
+    } else {
+      console.warn(`[ingestion] OCR returned no text for page ${pageNum}`);
+    }
+  }
+
+  return ocrTexts.join("\n");
+}
+
+async function recognizeImageBuffer(buffer: Buffer): Promise<string> {
+  const worker = await getOcrWorker();
+  const { data } = await worker.recognize(buffer);
+  return data?.text ?? "";
+}
+
+async function getOcrWorker(): Promise<TesseractWorker> {
+  if (!ocrWorkerPromise) {
+    ocrWorkerPromise = (async () => {
+      const logger =
+        process.env.RAG_OCR_DEBUG === "true"
+          ? (message: TesseractLoggerMessage) => console.debug("[ocr]", message)
+          : undefined;
+      const workerOptions = logger ? { cacheMethod: "none", logger } : { cacheMethod: "none" };
+      const worker = await Tesseract.createWorker(undefined, undefined, workerOptions);
+      await worker.reinitialize("eng");
+      return worker;
+    })();
+  }
+
+  return ocrWorkerPromise;
+}
+
+type CanvasContext = NonNullable<ReturnType<Canvas["getContext"]>>;
+type CanvasAndContext = {
+  canvas: Canvas;
+  context: CanvasContext;
+};
+
+async function renderPageToImageBuffer(page: PDFPageProxy, scale: number): Promise<Buffer> {
+  const viewport = page.getViewport({ scale });
+  const canvasFactory = new NodeCanvasFactory();
+  const canvasAndContext = canvasFactory.create(viewport.width, viewport.height);
+  const renderContext = {
+    canvasContext: canvasAndContext.context,
+    viewport,
+    canvasFactory,
+  };
+
+  await page.render(renderContext as never).promise;
+  const buffer = canvasAndContext.canvas.toBuffer("image/png");
+  canvasFactory.destroy(canvasAndContext);
+  return buffer;
+}
+
+class NodeCanvasFactory {
+  create(width: number, height: number): CanvasAndContext {
+    if (width <= 0 || height <= 0) {
+      throw new Error("Invalid canvas size");
+    }
+    const canvas = createCanvas(width, height);
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Failed to get 2D context from canvas");
+    }
+    return { canvas, context };
+  }
+
+  reset(target: CanvasAndContext, width: number, height: number) {
+    target.canvas.width = width;
+    target.canvas.height = height;
+  }
+
+  destroy(target: CanvasAndContext) {
+    target.canvas.width = 0;
+    target.canvas.height = 0;
+  }
+}
+
+function guardAgainstBinaryGarbage(text: string) {
+  if (!text) {
+    throw new Error("Extracted text is empty; check the source document");
+  }
+
+  const sample = text.slice(0, 4000);
+  if (PDF_BINARY_MARKER_REGEX.test(sample)) {
+    throw new Error(
+      "Extracted text still looks like raw PDF binary; blocking ingestion instead of embedding garbage",
+    );
+  }
 }
 
 function chunkText(text: string): ChunkPayload[] {
   // Normalize whitespace aggressively so deterministic chunk hashes stay stable across re-ingests.
   const clean = text.replace(/\s+/g, " ").trim();
-  const chunks: ChunkPayload[] = [];
+  const rawChunks: ChunkPayload[] = [];
 
   if (!clean) {
-    return chunks;
+    return rawChunks;
   }
 
   // Sliding window with overlap prevents sentences from being split harshly at boundaries.
@@ -180,7 +350,7 @@ function chunkText(text: string): ChunkPayload[] {
   while (start < clean.length) {
     const end = Math.min(start + CHUNK_SIZE, clean.length);
     const slice = clean.slice(start, end);
-    chunks.push({
+    rawChunks.push({
       chunk_index: chunkIndex,
       content: slice,
       token_count: estimateTokens(slice),
@@ -192,11 +362,71 @@ function chunkText(text: string): ChunkPayload[] {
     start += CHUNK_SIZE - CHUNK_OVERLAP;
   }
 
-  return chunks;
+  const meaningfulChunks = rawChunks
+    .filter((chunk) => isMeaningfulChunk(chunk.content))
+    .map((chunk, index) => ({
+      ...chunk,
+      chunk_index: index,
+    }));
+
+  if (meaningfulChunks.length > 0) {
+    return meaningfulChunks;
+  }
+
+  // If we filtered everything, fall back to a looser heuristic so short filings still ingest.
+  const fallbackChunks = rawChunks
+    .filter((chunk) => hasMinimumAlpha(chunk.content, 10))
+    .map((chunk, index) => ({
+      ...chunk,
+      chunk_index: index,
+    }));
+
+  if (fallbackChunks.length > 0) {
+    console.warn("[ingestion] Chunk noise filter fell back to looser heuristic for filing");
+    return fallbackChunks;
+  }
+
+  return rawChunks;
+}
+
+// When analysts see "ReportLab" or raw PDF operators in answers, it's a sign
+// that binary streams slipped into the chunk store. This regex blocks the most
+// common offenders before they reach embeddings.
+const NOISE_MARKER_REGEX = /(endobj|endstream|\bxref\b|\/ProcSet|ReportLab Generated PDF)/i;
+
+function isMeaningfulChunk(content: string): boolean {
+  const trimmed = content.trim();
+  if (trimmed.length < 40) {
+    return false;
+  }
+
+  if (NOISE_MARKER_REGEX.test(trimmed)) {
+    return false;
+  }
+
+  const alphaCount = (trimmed.match(/[A-Za-z]/g) ?? []).length;
+  const digitCount = (trimmed.match(/\d/g) ?? []).length;
+  const lexicalRatio = (alphaCount + digitCount) / Math.max(trimmed.length, 1);
+
+  // Require a reasonable amount of letters/numbers so we keep prose but drop binary blobs.
+  return alphaCount >= 25 && lexicalRatio >= 0.2;
+}
+
+function hasMinimumAlpha(content: string, minAlpha: number) {
+  const alphaCount = (content.match(/[A-Za-z]/g) ?? []).length;
+  return alphaCount >= minAlpha;
 }
 
 function estimateTokens(content: string) {
   return Math.max(1, Math.round(content.length / 4));
+}
+
+function sanitizeExtractedText(text: string): string {
+  if (!text) {
+    return "";
+  }
+
+  return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 }
 
 async function replaceFilingChunksWithContent(
@@ -232,96 +462,6 @@ async function replaceFilingChunksWithContent(
   }
 }
 
-export async function embedFilingChunks(filingId: string) {
-  const supabaseAdmin = createAdminClient();
-  const filing = await fetchFiling(supabaseAdmin, filingId);
-  return embedPendingChunksForFiling(supabaseAdmin, filing);
-}
-
-async function embedPendingChunksForFiling(
-  supabaseAdmin: SupabaseClient,
-  filing: FilingRecord,
-) {
-  const pendingChunks = await fetchPendingChunks(supabaseAdmin, filing.id);
-
-  if (pendingChunks.length === 0) {
-    if (filing.ingestion_status !== "ready") {
-      await updateFilingStatus(supabaseAdmin, filing.id, {
-        ingestion_status: "ready",
-        ingestion_error: null,
-      });
-    }
-
-    return { embedded: 0 } as const;
-  }
-
-  await updateFilingStatus(supabaseAdmin, filing.id, {
-    ingestion_status: "embedding",
-    embedding_model: DEFAULT_EMBEDDING_MODEL,
-  });
-
-  const totalEmbedded = await processEmbeddingBatches(
-    supabaseAdmin,
-    pendingChunks,
-  );
-
-  await updateFilingStatus(supabaseAdmin, filing.id, {
-    ingestion_status: "ready",
-    ingestion_error: null,
-    embedding_model: DEFAULT_EMBEDDING_MODEL,
-  });
-
-  return { embedded: totalEmbedded } as const;
-}
-
-async function fetchPendingChunks(supabaseAdmin: SupabaseClient, filingId: string) {
-  const { data, error } = await supabaseAdmin
-    .from("filing_chunks")
-    .select("id, chunk_index, content")
-    .eq("filing_id", filingId)
-    .is("embedding", null)
-    .order("chunk_index", { ascending: true });
-
-  if (error) {
-    throw new Error(`Unable to load pending chunks: ${error.message}`);
-  }
-
-  return (data ?? []) as PendingChunkRecord[];
-}
-
-async function processEmbeddingBatches(
-  supabaseAdmin: SupabaseClient,
-  chunks: PendingChunkRecord[],
-) {
-  const batchSize = MAX_CHUNKS_PER_EMBED_REQUEST;
-  let totalEmbedded = 0;
-
-  for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize);
-    const vectors = await embedTexts(batch.map((chunk) => chunk.content));
-
-    const timestamp = new Date().toISOString();
-    const payload = batch.map((chunk, idx) => ({
-      id: chunk.id,
-      embedding: vectors[idx],
-      embedding_model: DEFAULT_EMBEDDING_MODEL,
-      embedded_at: timestamp,
-    }));
-
-    const { error } = await supabaseAdmin.from("filing_chunks").upsert(payload);
-
-    if (error) {
-      throw new Error(
-        `Failed to persist embeddings for batch starting at chunk index ${batch[0]?.chunk_index}: ${error.message}`,
-      );
-    }
-
-    totalEmbedded += payload.length;
-  }
-
-  return totalEmbedded;
-}
-
 async function updateFilingStatus(
   supabase: SupabaseClient,
   filingId: string,
@@ -339,3 +479,8 @@ async function updateFilingStatus(
     throw new Error(`Unable to update filing status: ${error.message}`);
   }
 }
+
+export const __TEST_ONLY__ = {
+  extractText,
+  guardAgainstBinaryGarbage,
+};

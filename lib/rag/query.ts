@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { embedTexts } from "@/lib/embeddings/groq";
+import { embedText } from "@/lib/cohere";
 import { callGroqChat, type ChatMessage } from "@/lib/llm/groq";
 
 export type AskFilters = {
@@ -11,7 +11,7 @@ export type AskFilters = {
 };
 
 export type NormalizedFilters = {
-  filingIds: number[] | null;
+  filingIds: string[] | null;
   tickerPattern: string | null;
   filingTypes: string[] | null;
   dateFrom: string | null;
@@ -20,7 +20,7 @@ export type NormalizedFilters = {
 
 export type RetrievedChunk = {
   chunk_id: string;
-  filing_id: number;
+  filing_id: string;
   user_id: string;
   content: string;
   similarity: number;
@@ -47,16 +47,16 @@ export function normalizeFilters(filters?: AskFilters | null): NormalizedFilters
   const filingIds = Array.isArray(filters.filingIds)
     ? filters.filingIds
         .map((value) => {
-          if (typeof value === "number" && Number.isFinite(value)) {
-            return Math.trunc(value);
+          if (typeof value === "string") {
+            const trimmed = value.trim();
+            return trimmed ? trimmed : null;
           }
-          if (typeof value === "string" && value.trim()) {
-            const parsed = Number(value.trim());
-            return Number.isFinite(parsed) ? Math.trunc(parsed) : null;
+          if (typeof value === "number" && Number.isFinite(value)) {
+            return String(Math.trunc(value));
           }
           return null;
         })
-        .filter((value): value is number => typeof value === "number")
+        .filter((value): value is string => typeof value === "string" && value.length > 0)
     : null;
 
   const tickerPattern = filters.ticker?.trim()
@@ -85,7 +85,7 @@ export function normalizeFilters(filters?: AskFilters | null): NormalizedFilters
 }
 
 export async function embedQuestion(question: string) {
-  const [vector] = await embedTexts([question]);
+  const [vector] = await embedText([question], { inputType: "search_query" });
   if (!vector) {
     throw new Error("Failed to generate embedding for question");
   }
@@ -120,6 +120,23 @@ export async function vectorSearchChunks(
   }
 
   return (data as RetrievedChunk[]) ?? [];
+}
+
+export async function countEmbeddedChunksForUser(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<number> {
+  const { count, error } = await supabaseAdmin
+    .from("filing_chunks")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .not("embedding", "is", null);
+
+  if (error) {
+    throw new Error(`Failed to count embedded chunks: ${error.message}`);
+  }
+
+  return count ?? 0;
 }
 
 export function buildQaMessages(question: string, chunks: RetrievedChunk[]): ChatMessage[] {
@@ -161,7 +178,7 @@ export async function answerWithChunks(question: string, chunks: RetrievedChunk[
 export function buildCitations(chunks: RetrievedChunk[]) {
   return chunks.map((chunk) => ({
     chunkId: chunk.chunk_id,
-    filingId: String(chunk.filing_id),
+    filingId: chunk.filing_id,
     similarity: chunk.similarity,
     snippet: chunk.content.replace(/\s+/g, " ").slice(0, 280),
     ticker: chunk.ticker ?? undefined,

@@ -41,7 +41,7 @@ create index if not exists filings_user_created_idx
 create table if not exists public.filing_chunks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  filing_id bigint not null references public.filings(id) on delete cascade,
+  filing_id uuid not null references public.filings(id) on delete cascade,
   chunk_index integer not null,
   content text not null,
   token_count integer,
