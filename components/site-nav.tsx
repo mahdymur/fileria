@@ -7,12 +7,11 @@ import type { Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/logout-button";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
-
+import { cn, hasEnvVars } from "@/lib/utils";
 const navigationLinks = [
-  { href: "/about", label: "About", hideOnApp: true },
-  { href: "/pricing", label: "Pricing", hideOnApp: true },
-  { href: "/auth/login", label: "Log In", hideWhenAuthenticated: true },
+  { href: "/#how-it-works", label: "Process", hideOnApp: true },
+  { href: "/#features", label: "Features", hideOnApp: true },
+  { href: "/#pricing", label: "Pricing", hideOnApp: true },
 ];
 
 const getIsActive = (pathname: string, href: string) => {
@@ -26,9 +25,27 @@ const getIsActive = (pathname: string, href: string) => {
 export function SiteNav() {
   const pathname = usePathname();
   const [session, setSession] = useState<Session | null>(null);
-  const isAuthenticated = !!session;
+  const [isScrolled, setIsScrolled] = useState(false);
+  const supabaseReady = Boolean(hasEnvVars);
+  const isAuthenticated = supabaseReady && !!session;
 
   useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!supabaseReady) {
+      setSession(null);
+      return;
+    }
+
     const supabase = createClient();
 
     supabase.auth.getSession().then(({ data }) => {
@@ -44,11 +61,15 @@ export function SiteNav() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [supabaseReady]);
 
   const visibleLinks = useMemo(() => {
     const isAppRoute = pathname.startsWith("/app");
     return navigationLinks.filter((link) => {
+      if (!supabaseReady && link.href.startsWith("/auth")) {
+        return false;
+      }
+
       if (link.hideOnApp && isAppRoute) {
         return false;
       }
@@ -59,52 +80,107 @@ export function SiteNav() {
 
       return true;
     });
-  }, [isAuthenticated, pathname]);
+  }, [isAuthenticated, pathname, supabaseReady]);
+
+  // Filter nav links for desktop (About, Process, Pricing)
+  const desktopNavLinks = visibleLinks.filter(
+    (link) =>
+      link.href === "/#how-it-works" || link.href === "/#features" || link.href === "/#pricing",
+  );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-[#0b0b0d]/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <div className="flex w-full items-center justify-between gap-4 sm:w-auto">
-          <Link href="/" className="text-base font-semibold text-emerald-400">
+    <header className="fixed top-0 left-0 right-0 z-[120] flex justify-center pt-4 px-4 pointer-events-none">
+      {/* Pill-shaped Navbar Container */}
+      <div
+        className={cn(
+          "w-full rounded-full border border-white/30 bg-white/[0.03] backdrop-blur-2xl",
+          "transition-all duration-300 ease-in-out pointer-events-auto",
+          isScrolled ? "max-w-lg" : "max-w-3xl",
+        )}
+        style={{
+          padding: "0.75rem 1.5rem",
+          background:
+            "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.04) 100%)",
+          borderColor: "rgba(255,255,255,0.25)",
+          boxShadow:
+            "0 4px 24px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(255,255,255,0.1), inset 0 1px 1px rgba(255,255,255,0.15), inset 0 -1px 1px rgba(0,0,0,0.05)",
+        }}
+      >
+        <div className={cn(
+          "flex items-center justify-between",
+          isScrolled ? "gap-3" : "gap-6"
+        )}>
+          {/* Logo - Left */}
+          <Link
+            href="/"
+            className="text-sm font-semibold text-emerald-400 transition-all duration-200 hover:text-emerald-300"
+          >
             Fileria
           </Link>
+
+          {/* Navigation - Center with Dot Separators */}
+          <nav className="hidden md:flex items-center gap-2 flex-1 justify-center">
+            {desktopNavLinks.map((item, index) => {
+              const active = getIsActive(pathname, item.href);
+              return (
+                <div key={item.href} className="flex items-center gap-2">
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "text-sm text-gray-300 transition-all duration-200 ease-in-out hover:text-emerald-400 px-2",
+                      active ? "font-semibold text-emerald-400" : ""
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                  {index < desktopNavLinks.length - 1 && (
+                    <span className="text-xs text-gray-500">·</span>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Mobile: Navigation */}
+          <nav className="flex md:hidden items-center gap-2 flex-1 justify-center">
+            {desktopNavLinks.slice(0, 2).map((item, index) => {
+              const active = getIsActive(pathname, item.href);
+              return (
+                <div key={item.href} className="flex items-center gap-2">
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "text-xs text-gray-300 transition-all duration-200 ease-in-out hover:text-emerald-400 px-1",
+                      active ? "font-semibold text-emerald-400" : ""
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                  {index < Math.min(desktopNavLinks.length - 1, 1) && (
+                    <span className="text-gray-500 text-[10px]">·</span>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* CTA Button - Right */}
           {isAuthenticated ? (
-            <LogoutButton className="sm:hidden" size="sm" variant="secondary" />
+            <div className="flex items-center">
+              <LogoutButton size={isScrolled ? "sm" : "sm"} />
+            </div>
           ) : (
-            <Button asChild size="sm" className="sm:hidden">
-              <Link href="/auth/sign-up">Sign Up</Link>
-            </Button>
+            <div className="flex items-center">
+              <Button 
+                asChild 
+                size={isScrolled ? "sm" : "sm"} 
+                className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold transition-all duration-200"
+              >
+                <Link href="/app">Try Now</Link>
+              </Button>
+            </div>
           )}
         </div>
-        <nav className="flex w-full flex-wrap items-center gap-x-6 gap-y-2 text-sm sm:flex-1 sm:flex-nowrap">
-          {visibleLinks.map((item) => {
-            const active = getIsActive(pathname, item.href);
-            const alignRight = item.href === "/auth/login";
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "text-gray-400 transition-all duration-200 ease-in-out hover:text-gray-200",
-                  alignRight ? "sm:ml-auto" : "",
-                  active ? "font-semibold text-emerald-400" : "",
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-          {isAuthenticated ? (
-            <LogoutButton className="ml-auto hidden sm:inline-flex" size="sm" />
-          ) : null}
-        </nav>
-        {!isAuthenticated ? (
-          <div className="hidden sm:block">
-            <Button asChild size="sm">
-              <Link href="/auth/sign-up">Sign Up</Link>
-            </Button>
-          </div>
-        ) : null}
       </div>
     </header>
   );

@@ -28,38 +28,34 @@ export function LandingHero({
   return (
     <section
       className={cn(
-  "relative overflow-hidden rounded-[36px] border border-primary/25 bg-[hsl(var(--background)/0.78)] px-8 py-20 shadow-neon transition-all duration-700",
-        "animate-in fade-in slide-in-from-bottom-2 duration-700 backdrop-blur",
-        "before:pointer-events-none before:absolute before:inset-[-40%] before:-z-10 before:animate-aurora before:bg-[conic-gradient(from_90deg,rgba(0,255,133,0.35)_0%,rgba(0,0,0,0)_55%,rgba(0,255,133,0.35)_100%)] before:opacity-60 before:mix-blend-screen before:content-['']",
-        "after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-[linear-gradient(130deg,rgba(0,255,133,0.18)_0%,transparent_42%,transparent_58%,rgba(0,255,133,0.2)_100%)] after:content-['']",
+        "relative overflow-hidden rounded-[36px] border border-emerald-500/20 bg-[#060708]/80 px-8 py-20 shadow-[0_0_120px_rgba(16,185,129,0.15)] transition-all duration-700",
+        "animate-in fade-in slide-in-from-bottom-2 duration-700 backdrop-blur-md",
         className,
       )}
     >
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
         {eyebrow ? (
-          <span className="rounded-full border border-primary/40 bg-primary/10 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-primary">
+          <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-emerald-400 animate-in fade-in duration-1000">
             {eyebrow}
           </span>
         ) : null}
-        <div className="space-y-4">
-          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+          <h1 className="text-4xl font-semibold tracking-tight text-emerald-50 sm:text-5xl lg:text-6xl xl:text-7xl">
             {title}
           </h1>
-          <p className="text-lg text-muted-foreground sm:text-xl">
+          <p className="text-lg text-muted-foreground sm:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed">
             {description}
           </p>
         </div>
-        <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <Button asChild size="lg" className="min-w-[160px]">
+        <div className="flex flex-col items-center gap-4 sm:flex-row animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <Button asChild size="lg" className="min-w-[180px] h-12 text-base shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all">
             <Link href={primaryCta.href}>{primaryCta.label}</Link>
           </Button>
-          <Button asChild size="lg" variant={secondaryCta.variant ?? "outline"} className="min-w-[160px]">
+          <Button asChild size="lg" variant={secondaryCta.variant ?? "outline"} className="min-w-[180px] h-12 text-base">
             <Link href={secondaryCta.href}>{secondaryCta.label}</Link>
           </Button>
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 -translate-y-1/2 bg-[radial-gradient(circle,var(--tw-gradient-stops))] from-primary/25 via-transparent to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute inset-0 -z-20 bg-aurora-grid opacity-40" />
     </section>
   );
 }

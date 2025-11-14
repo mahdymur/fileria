@@ -1,6 +1,22 @@
 import type { Metadata } from "next";
-import { LandingHero } from "@/components/landing/hero";
+import { HeroFullscreen } from "@/components/landing/hero-fullscreen";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { Features } from "@/components/landing/features";
+import { Testimonials } from "@/components/landing/testimonials";
+import { CtaSection } from "@/components/landing/cta-section";
+import { Stats } from "@/components/landing/stats";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { LightningIcon, TargetIcon, BrainIcon } from "@/components/landing/feature-icons";
 
 const steps = [
   {
@@ -17,66 +33,232 @@ const steps = [
   },
 ];
 
+const features = [
+  {
+    icon: <LightningIcon />,
+    title: "Lightning Fast",
+    description:
+      "Query filings and surface answers in under two seconds with enterprise-grade retrieval.",
+  },
+  {
+    icon: <TargetIcon />,
+    title: "Precise Citations",
+    description:
+      "Every response comes with paragraph-level references so you can validate insights instantly.",
+  },
+  {
+    icon: <BrainIcon />,
+    title: "AI-Powered Analysis",
+    description:
+      "Natural language understanding and financial tuning keep questions contextual and accurate.",
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      "Fileria cut our research time by 80%. What used to take hours now takes minutes. Game changer.",
+    author: "Sarah Chen",
+    role: "Senior Financial Analyst",
+    company: "TechVentures",
+  },
+  {
+    quote:
+      "The citation feature is incredible. I can finally trust the answers and verify sources instantly.",
+    author: "Michael Rodriguez",
+    role: "Investment Director",
+    company: "Capital Partners",
+  },
+  {
+    quote:
+      "Best tool we've adopted this year. The team loves it, and our clients are impressed with our speed.",
+    author: "Emily Watson",
+    role: "VP of Research",
+    company: "Strategic Advisors",
+  },
+];
+
+const stats = [
+  {
+    value: "< 2s",
+    label: "Query Latency",
+    description: "Average response time",
+  },
+  {
+    value: "99%",
+    label: "Accuracy Rate",
+    description: "Citation-backed answers",
+  },
+  {
+    value: "10K+",
+    label: "Filings Indexed",
+    description: "Ready to query instantly",
+  },
+];
+
+const pricingPlans = [
+  {
+    name: "Free",
+    price: "Free",
+    subtext: "Basic search access",
+    description: "Limited filings per month and single-company queries.",
+    bullets: ["Access recent SEC filings", "Text search across one ticker", "Email support"],
+  },
+  {
+    name: "Pro",
+    price: "$49/mo",
+    subtext: "Unlimited queries",
+    description: "Compare companies, save workspaces, and move faster with priority retrieval.",
+    bullets: ["Unlimited filings & questions", "Multi-company comparisons", "Priority retrieval speeds"],
+    highlighted: true,
+  },
+  {
+    name: "Enterprise",
+    price: "Contact us",
+    subtext: "Custom data sources",
+    description: "Tailored ingestion, team controls, and direct API hooks into your stack.",
+    bullets: [
+      "Dedicated onboarding & support",
+      "Bring-your-own data lake",
+      "Granular permissions & SSO",
+    ],
+  },
+];
+
 export const metadata: Metadata = {
-  title: "Fileria | Search, don’t suffer.",
+  title: "Fileria | Search, don't suffer.",
   description:
     "Fileria makes financial research painless with instant answers from SEC filings and reports.",
 };
 
 export default function HomePage() {
   return (
-    <div className="space-y-24 px-4 pb-24 pt-16 sm:pt-24">
-      <div className="mx-auto w-full max-w-6xl space-y-24">
-        <LandingHero
-          eyebrow="Financial research, simplified"
-          title="Search, don’t suffer."
-          description="Fileria makes financial research painless — query SEC filings and reports instantly."
-          primaryCta={{ label: "Try the App", href: "/app" }}
-          secondaryCta={{ label: "View Pricing", href: "/pricing", variant: "outline" }}
-        />
+    <div className="relative min-h-screen bg-black">
+      <ScrollReveal />
+      {/* Full Screen Hero */}
+      <HeroFullscreen
+        title="search, don't suffer."
+        description="We make financial research painless. Query SEC filings and reports instantly with AI-powered precision."
+        primaryCta={{ label: "Start Free Trial", href: "/app" }}
+        secondaryCta={{ label: "View Pricing", href: "#pricing", variant: "outline" }}
+      />
 
-        <HowItWorks
-          title="How It Works"
-          subtitle="From first question to final answer in under a minute."
-          steps={steps}
-        />
+      {/* Gradient Transition into Content */}
+      <div className="relative z-10 -mt-32">
+        <div className="h-32 bg-gradient-to-b from-transparent via-black/60 to-black" />
 
-        <section className="mx-auto max-w-3xl rounded-[28px] border border-emerald-500/20 bg-[#060708]/80 px-12 py-16 text-center shadow-[0_0_140px_rgba(16,185,129,0.16)] backdrop-blur animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <p className="text-lg font-medium text-emerald-50 sm:text-xl">
-            “Loved by analysts who hate Ctrl+F.”
-          </p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Fileria surfaces the passages that matter, backed by citations, so you spend minutes—not afternoons—finding
-            answers.
-          </p>
-        </section>
+        {/* Solid Black Content Area */}
+        <div className="bg-black pb-24">
+          <div className="flex flex-col space-y-32">
+            {/* Stats Section */}
+            <section id="stats" data-scroll-reveal className="relative px-4">
+              <div className="mx-auto w-full max-w-6xl">
+                <Stats stats={stats} />
+              </div>
+            </section>
 
-        <section className="grid gap-10 rounded-[32px] border border-emerald-500/20 bg-[#050607] px-10 py-14 shadow-[0_0_200px_rgba(16,185,129,0.18)] transition-all duration-700 hover:shadow-[0_0_240px_rgba(16,185,129,0.24)] animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-semibold tracking-tight text-emerald-50 sm:text-4xl">Built for speed</h2>
-            <p className="max-w-2xl text-base text-muted-foreground">
-              No multi-step setup. Drag in filings, ask a question, and pivot through answers with tab-switch fast
-              performance. Fileria keeps every interaction snappy so you can focus on the numbers.
-            </p>
+            {/* How It Works */}
+            <section id="how-it-works" data-scroll-reveal className="relative px-4">
+              <HowItWorks
+                title="Your path to faster, painless financial research"
+                subtitle="An automated, AI-powered workflow that takes you from raw SEC filings to trusted answers in seconds."
+                steps={steps}
+              />
+            </section>
+
+            {/* Features Section */}
+            <section id="features" data-scroll-reveal className="relative px-4">
+              <div className="mx-auto w-full max-w-6xl">
+                <Features
+                  title="Everything you need to research faster"
+                  subtitle="Powerful features designed for financial professionals who value speed and accuracy."
+                  features={features}
+                />
+              </div>
+            </section>
+
+            {/* Pricing */}
+            <section id="pricing" data-scroll-reveal className="relative px-4">
+              <div className="mx-auto w-full max-w-6xl space-y-12">
+                <div className="space-y-4 text-center">
+                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-300/80">
+                    Pricing
+                  </p>
+                  <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                    Plans built for every research workflow
+                  </h2>
+                  <p className="text-base leading-relaxed text-white/70">
+                    No surprise fees—just the speed, collaboration, and security your team needs.
+                  </p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-3">
+                  {pricingPlans.map((plan) => (
+                    <Card
+                      key={plan.name}
+                      className={cn(
+                        "relative flex h-full flex-col overflow-hidden border-white/10 bg-white/[0.02] text-left transition-transform duration-500 hover:-translate-y-1.5",
+                        plan.highlighted
+                          ? "border-emerald-500/40 shadow-[0_35px_120px_rgba(16,185,129,0.3)]"
+                          : "shadow-[0_30px_90px_rgba(0,0,0,0.65)]",
+                      )}
+                    >
+                      {plan.highlighted ? (
+                        <span className="absolute right-4 top-4 rounded-full border border-emerald-500/60 bg-emerald-500/15 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.35em] text-emerald-200">
+                          Popular
+                        </span>
+                      ) : null}
+                      <CardHeader className="space-y-2">
+                        <CardTitle className="text-2xl font-semibold text-white">{plan.name}</CardTitle>
+                        <CardDescription className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-emerald-300/80">
+                          {plan.subtext}
+                        </CardDescription>
+                        <div className="text-3xl font-semibold text-white">{plan.price}</div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-sm text-white/70">{plan.description}</p>
+                        <ul className="space-y-2 text-sm text-white/70">
+                          {plan.bullets.map((item) => (
+                            <li key={item} className="flex items-center gap-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                      <CardFooter className="mt-auto">
+                        <Button asChild className="w-full" size="lg" variant={plan.highlighted ? "default" : "outline"}>
+                          <a href="/app">{plan.highlighted ? "Start Pro" : "Get Started"}</a>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Testimonials */}
+            <section data-scroll-reveal className="relative px-4">
+              <div className="mx-auto w-full max-w-6xl">
+                <Testimonials
+                  title="Trusted by financial teams"
+                  testimonials={testimonials}
+                />
+              </div>
+            </section>
+
+            {/* CTA Section */}
+            <section data-scroll-reveal className="relative px-4">
+              <div className="mx-auto w-full max-w-6xl">
+                <CtaSection
+                  title="Ready to transform your research workflow?"
+                  description="Join hundreds of financial teams using Fileria to work faster and smarter."
+                  primaryCta={{ label: "Start Free Trial", href: "/app" }}
+                  secondaryCta={{ label: "Schedule Demo", href: "#pricing" }}
+                />
+              </div>
+            </section>
           </div>
-          <dl className="grid gap-6 sm:grid-cols-3">
-            <div className="rounded-2xl border border-emerald-500/15 bg-[#07090a]/90 p-6 shadow-[0_0_45px_rgba(16,185,129,0.08)]">
-              <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-emerald-400/80">Query latency</dt>
-              <dd className="mt-4 text-3xl font-semibold text-emerald-50">&lt; 2s</dd>
-              <p className="mt-2 text-xs text-muted-foreground">Average response time across filings.</p>
-            </div>
-            <div className="rounded-2xl border border-emerald-500/15 bg-[#07090a]/90 p-6 shadow-[0_0_45px_rgba(16,185,129,0.08)]">
-              <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-emerald-400/80">Setup time</dt>
-              <dd className="mt-4 text-3xl font-semibold text-emerald-50">5 min</dd>
-              <p className="mt-2 text-xs text-muted-foreground">Connect data and invite teammates fast.</p>
-            </div>
-            <div className="rounded-2xl border border-emerald-500/15 bg-[#07090a]/90 p-6 shadow-[0_0_45px_rgba(16,185,129,0.08)]">
-              <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.32em] text-emerald-400/80">Accuracy</dt>
-              <dd className="mt-4 text-3xl font-semibold text-emerald-50">99%</dd>
-              <p className="mt-2 text-xs text-muted-foreground">Citation-backed answers you can verify.</p>
-            </div>
-          </dl>
-        </section>
+        </div>
       </div>
     </div>
   );

@@ -62,12 +62,17 @@
   * {
     border-color: hsl(var(--border));
   }
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-sans), system-ui, sans-serif;
+    overflow-x: hidden;
   }
 
   h1,
@@ -94,7 +99,47 @@
 }
 
 @layer utilities {
+  [data-scroll-reveal] {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .scroll-reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  #stats,
+  #how-it-works,
+  #features,
+  #pricing {
+    scroll-margin-top: 120px;
+  }
+}
+
+@layer utilities {
   .grid-overlay {
     background-image: radial-gradient(circle at center, rgba(0, 255, 133, 0.08) 0, rgba(0, 255, 133, 0) 65%);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
