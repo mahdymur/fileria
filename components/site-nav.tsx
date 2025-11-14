@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/logout-button";
 import { createClient } from "@/lib/supabase/client";
 import { cn, hasEnvVars } from "@/lib/utils";
-const navigationLinks = [
+
+type NavigationLink = {
+  href: string;
+  label: string;
+  hideOnApp?: boolean;
+  hideWhenAuthenticated?: boolean;
+};
+
+const navigationLinks: NavigationLink[] = [
   { href: "/#how-it-works", label: "Process", hideOnApp: true },
   { href: "/#features", label: "Features", hideOnApp: true },
   { href: "/#pricing", label: "Pricing", hideOnApp: true },
