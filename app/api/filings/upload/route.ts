@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { ingestFiling } from "@/lib/ingestion/pipeline";
 import { randomUUID } from "crypto";
 import { Buffer } from "buffer";
 import { extname } from "path";
@@ -13,6 +14,12 @@ export async function POST(request: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  console.log("[upload] session", {
+    hasSession: !!session,
+    userId: session?.user.id,
+    email: session?.user.email,
+  });
 
   if (!session) {
     return NextResponse.json(
@@ -81,17 +88,36 @@ export async function POST(request: NextRequest) {
       ingestion_status: "uploaded",
     })
     .select(
-      "id, title, content, storage_path, original_filename, content_type, ingestion_status, file_size, extracted_at, created_at",
+      "id, user_id, title, content, storage_path, original_filename, content_type, ingestion_status, file_size, extracted_at, created_at",
     )
     .single();
 
   if (error) {
+    console.error("[upload] insert error", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+
     await supabase.storage.from("filings").remove([filePath]).catch(() => undefined);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 },
-    );
+
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ filing: data }, { status: 201 });
+  let ingestionStatus: { status: string; message?: string } | null = null;
+
+  try {
+    ingestionStatus = await ingestFiling(data.id);
+  } catch (pipelineError) {
+    console.error("Failed to ingest filing", pipelineError);
+  }
+
+  return NextResponse.json(
+    {
+      filing: data,
+      ingestion: ingestionStatus ?? { status: "failed", message: "Ingestion will retry later." },
+    },
+    { status: 201 },
+  );
 }

@@ -72,7 +72,7 @@ export function TutorialSteps() {
       <TutorialStep title="Tutorial 4: What is a REST API">
         <div className="space-y-3">
           <p>
-            Learn what REST APIs are, how they work, and why they're essential for 
+            Learn what REST APIs are, how they work, and why they&apos;re essential for 
             building modern web applications.
           </p>
           <div className="flex gap-2 flex-wrap">

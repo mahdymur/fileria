@@ -31,7 +31,7 @@ export function Testimonials({ title, testimonials, className }: TestimonialsPro
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className="space-y-4">
-              <div className="text-2xl text-emerald-400">"</div>
+              <div className="text-2xl text-emerald-400">&ldquo;</div>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {testimonial.quote}
               </p>

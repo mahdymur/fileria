@@ -17,7 +17,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("filings")
     .select(
-      "id, title, content, storage_path, original_filename, content_type, ingestion_status, file_size, extracted_at, created_at",
+      "id, title, content, storage_path, original_filename, content_type, ingestion_status, ingestion_error, chunk_count, file_size, extracted_at, created_at, updated_at",
     )
     .eq("user_id", session.user.id)
     .order("created_at", { ascending: false });
