@@ -443,7 +443,7 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
       <div className="mt-6 space-y-5 rounded-3xl border border-white/5 bg-black/40 p-6 text-white transition-all duration-300">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-primary/60">
-            <span>Groq answer</span>
+            <span>Answer</span>
           </div>
           {answer ? (
             <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-white/90">{answer}</p>
