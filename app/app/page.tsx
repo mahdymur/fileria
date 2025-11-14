@@ -261,24 +261,16 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
   const disableInputs = !hasReadyFilings || isSubmitting;
 
   return (
-    <section className="rounded-3xl border border-primary/20 bg-[#030507]/80 p-8 text-foreground shadow-[0_0_80px_rgba(34,197,94,0.18)] backdrop-blur">
+    <div className="space-y-6 text-foreground">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/70">Quick search</p>
-          <h2 className="text-3xl font-semibold text-white">
-            <span className="bg-gradient-to-r from-primary via-[#38ffa5] to-primary/80 bg-clip-text text-transparent">
-              Ask, relax, get neon-fast answers.
-            </span>
-          </h2>
-          <p className="text-sm text-white/70">
-            Seamless Cohere retrieval + Groq answers tuned for filings, minus the EDGAR headache.
-          </p>
+        <div className="space-y-1.5">
+          <h2 className="text-2xl font-semibold text-white">Workspace Q&amp;A</h2>
         </div>
         <div className="relative hidden sm:flex">
           <div className="group relative rounded-full border border-primary/30 bg-primary/5 p-3 text-primary" aria-label="Answers grounding tooltip">
             <Info className="h-4 w-4" />
-            <span className="pointer-events-none absolute -top-16 right-0 w-60 rounded-2xl border border-primary/40 bg-black/80 px-3 py-2 text-xs text-white/80 opacity-0 shadow-2xl transition-all duration-200 group-hover:-translate-y-1 group-hover:opacity-100">
-              Answers are grounded in your uploaded filings using Cohere + Groq.
+            <span className="pointer-events-none absolute -top-16 right-0 w-60 rounded-2xl border border-primary/30 bg-black/80 px-3 py-2 text-xs text-white/80 opacity-0 shadow-2xl transition-all duration-200 group-hover:-translate-y-1 group-hover:opacity-100">
+              Answers stay tied to the filings you upload and prepare.
             </span>
           </div>
         </div>
@@ -290,7 +282,7 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
         </div>
       ) : null}
 
-      <form onSubmit={(event) => { event.preventDefault(); submitQuestion(); }} className="mt-6 space-y-5">
+      <form onSubmit={(event) => { event.preventDefault(); submitQuestion(); }} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="qa-question" className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/70">
             Your question
@@ -306,7 +298,6 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
             />
             <Sparkles className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
           </div>
-          <p className="text-xs text-white/60">Short, long, or messy—Groq will stitch together a calm answer.</p>
         </div>
 
         <div className="flex flex-wrap gap-2 text-xs text-white/80">
@@ -354,10 +345,10 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
 
           {filterMode === "custom" ? (
             <div className="mt-4 space-y-2">
-              <p className="text-sm text-white/70">Select one or more ready filings.</p>
+              <p className="text-sm text-white/70">Pick any ready filings.</p>
               <div className="max-h-52 space-y-2 overflow-y-auto rounded-2xl border border-primary/20 bg-black/30 p-3">
                 {readyFilings.length === 0 ? (
-                  <p className="text-xs text-white/50">No filings are ready yet.</p>
+                  <p className="text-xs text-white/50">No filings ready.</p>
                 ) : (
                   readyFilings.map((filing) => {
                     const normalizedId = String(filing.id);
@@ -424,9 +415,6 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
               "Ask away"
             )}
           </Button>
-          <p className="text-xs text-white/60">
-            Answers arrive in a few seconds. Groq handles the prose while Cohere finds the chunks.
-          </p>
         </div>
       </form>
 
@@ -469,7 +457,6 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
             <h3 className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/60">
               Sources
             </h3>
-            <span className="text-xs text-white/60">Exact chunk citations pulled via Cohere retrieval.</span>
           </div>
           {citations.length === 0 ? (
             <p className="text-sm text-white/60">No supporting chunks returned yet.</p>
@@ -510,7 +497,7 @@ function DashboardQaPanel({ filings, isLoadingFilings }: DashboardQaPanelProps) 
           <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-100">{pdfError}</div>
         ) : null}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -713,120 +700,115 @@ export default function AppDashboardPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-5xl flex-col gap-10 px-4 py-16">
-      <header className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/70">Ingestion Control Room</p>
+      <header className="mt-6 space-y-3 sm:mt-10">
         <h1 className="text-4xl font-semibold tracking-tight text-transparent sm:text-5xl bg-gradient-to-r from-primary via-[#38ffa5] to-primary/80 bg-clip-text drop-shadow-[0_0_35px_rgba(0,255,133,0.25)]">
-          Turn uploads into Q&A-ready context.
+          Work with your filings in one place.
         </h1>
-        <p className="text-lg text-muted-foreground">
-          Upload filings, monitor extraction, and trigger chunking + embeddings with a single click.
+        <p className="text-base text-muted-foreground">
+          Upload docs, track ingestion, and ask grounded questions without leaving this screen.
         </p>
       </header>
 
-      <DashboardQaPanel filings={filings} isLoadingFilings={isLoading} />
-    <section className="rounded-3xl border border-primary/25 bg-secondary/80 p-8 shadow-[0_0_80px_rgba(0,255,133,0.12)] backdrop-blur">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary/70">Pipeline</p>
-            <h2 className="mt-3 text-2xl font-medium text-foreground">Uploaded → Extracted → Embedded → Ready</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Status pills mirror the database flag (<code className="rounded bg-foreground/10 px-1 py-0.5 text-[0.65rem]">filings.ingestion_status</code>). Hit
-              “Prepare for Q&A” to start extraction, chunking, and embeddings for a filing. Progress and errors render inline.
-            </p>
+      <section className="rounded-3xl border border-white/10 bg-[#05080d]/90 p-8 shadow-[0_45px_120px_rgba(0,0,0,0.55)] backdrop-blur">
+        <div className="divide-y divide-white/5">
+          <div className="pb-10">
+            <DashboardQaPanel filings={filings} isLoadingFilings={isLoading} />
           </div>
-          <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/70">Ready filings</p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
-                {readyCount} / {totalFilings}
-              </p>
+
+          <div className="py-10">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-foreground">Ingestion status</h2>
+              </div>
+              <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-muted-foreground/70">Ready filings</p>
+                  <p className="mt-2 text-2xl font-semibold text-foreground">
+                    {readyCount} / {totalFilings}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground/70">Last refresh</p>
+                  <p className="mt-2 text-foreground">{lastRefreshed ? lastRefreshed.toLocaleTimeString() : "Just now"}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/70">Last refresh</p>
-              <p className="mt-2 text-foreground">{lastRefreshed ? lastRefreshed.toLocaleTimeString() : "Just now"}</p>
+            <div className="mt-6 flex flex-wrap gap-4">
+              <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+                {isLoading ? "Refreshing…" : "Refresh status"}
+              </Button>
+              <Button variant="ghost" onClick={handleSignOut} disabled={isSigningOut}>
+                {isSigningOut ? "Signing out…" : "Log out"}
+              </Button>
             </div>
           </div>
-        </div>
-        <div className="mt-6 flex flex-wrap gap-4">
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-            {isLoading ? "Refreshing…" : "Refresh status"}
-          </Button>
-          <Button variant="ghost" onClick={handleSignOut} disabled={isSigningOut}>
-            {isSigningOut ? "Signing out…" : "Log out"}
-          </Button>
-        </div>
-      </section>
 
-      <section className="rounded-3xl border border-primary/20 bg-background/60 p-8 shadow-[0_0_60px_rgba(0,255,133,0.12)]">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">Upload a filing</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Choose a PDF or plain text file. We&apos;ll store it securely, then you can prepare it for Q&amp;A from the list below.
-        </p>
+          <div className="py-10 space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-foreground">Upload filings</h2>
+            </div>
+            <form onSubmit={handleUpload} className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_auto] md:items-end">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">File</label>
+                <input
+                  type="file"
+                  accept=".pdf,.txt,application/pdf,text/plain"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setUploadFile(file);
+                    if (file && !uploadTitle) {
+                      setUploadTitle(file.name.replace(/\.(pdf|txt)$/i, ""));
+                    }
+                  }}
+                  className="block w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary/90 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground hover:file:bg-primary"
+                />
+              </div>
 
-        <form onSubmit={handleUpload} className="mt-5 grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_auto] md:items-end">
-          <div className="space-y-2">
-            <label className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">File</label>
-            <input
-              type="file"
-              accept=".pdf,.txt,application/pdf,text/plain"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
-                setUploadFile(file);
-                if (file && !uploadTitle) {
-                  setUploadTitle(file.name.replace(/\.(pdf|txt)$/i, ""));
-                }
-              }}
-              className="block w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary/90 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground hover:file:bg-primary"
-            />
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Title</label>
+                <input
+                  type="text"
+                  value={uploadTitle}
+                  onChange={(event) => setUploadTitle(event.target.value)}
+                  placeholder="Optional, e.g. AAPL 10-K 2024"
+                  className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+                />
+              </div>
+
+              <div className="md:text-right">
+                <Button
+                  type="submit"
+                  disabled={uploading || !uploadFile}
+                  className="w-full md:w-auto"
+                >
+                  {uploading ? "Uploading…" : "Upload filing"}
+                </Button>
+              </div>
+            </form>
+            {error ? (
+              <div className="rounded-2xl border border-red-500/50 bg-red-500/10 px-6 py-4 text-sm text-red-100">{error}</div>
+            ) : null}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Title</label>
-            <input
-              type="text"
-              value={uploadTitle}
-              onChange={(event) => setUploadTitle(event.target.value)}
-              placeholder="Optional, e.g. AAPL 10-K 2024"
-              className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
-            />
-          </div>
+          <div className="pt-10 space-y-5">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-semibold tracking-tight">Your filings</h2>
+            </div>
 
-          <div className="md:text-right">
-            <Button
-              type="submit"
-              disabled={uploading || !uploadFile}
-              className="w-full md:w-auto"
-            >
-              {uploading ? "Uploading…" : "Upload filing"}
-            </Button>
-          </div>
-        </form>
-      </section>
-
-      {error ? (
-        <div className="rounded-2xl border border-red-500/50 bg-red-500/10 px-6 py-4 text-sm text-red-100">{error}</div>
-      ) : null}
-
-      <section className="space-y-5">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Your filings</h2>
-          <p className="text-sm text-muted-foreground">Each card shows ingestion progress, metadata, and the Prepare for Q&A action.</p>
-        </div>
-
-        {isLoading ? (
-          <div className="rounded-2xl border border-primary/15 bg-background/30 p-10 text-center text-sm text-muted-foreground animate-pulse">
-            Loading filings…
-          </div>
-        ) : filings.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-primary/30 bg-background/40 p-10 text-center">
-            <p className="text-base font-medium text-foreground">No filings yet.</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Upload a PDF via <code className="rounded bg-foreground/10 px-1.5 py-0.5 text-xs">/api/filings/upload</code> to see it appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {filings.map((filing) => {
+            {isLoading ? (
+              <div className="rounded-2xl border border-primary/15 bg-background/30 p-10 text-center text-sm text-muted-foreground animate-pulse">
+                Loading filings…
+              </div>
+            ) : filings.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-background/40 p-10 text-center">
+                <p className="text-base font-medium text-foreground">No filings yet.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Upload a PDF via <code className="rounded bg-foreground/10 px-1.5 py-0.5 text-xs">/api/filings/upload</code> to see it appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {filings.map((filing) => {
               const status = filing.ingestion_status ?? "uploaded";
               const statusMeta = STATUS_META[status] ?? FALLBACK_STATUS;
               const isBusy = Boolean(activeRuns[filing.id]) || status === "extracting" || status === "embedding";
@@ -900,6 +882,8 @@ export default function AppDashboardPage() {
             })}
           </div>
         )}
+          </div>
+        </div>
       </section>
     </div>
   );

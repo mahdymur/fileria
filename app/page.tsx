@@ -5,7 +5,6 @@ import { Features } from "@/components/landing/features";
 import { Testimonials } from "@/components/landing/testimonials";
 import { CtaSection } from "@/components/landing/cta-section";
 import { Stats } from "@/components/landing/stats";
-import { AskDemo } from "@/components/landing/ask-demo";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { Button } from "@/components/ui/button";
 import {
@@ -155,13 +154,6 @@ export default function HomePage() {
             <section id="stats" data-scroll-reveal className="relative px-4">
               <div className="mx-auto w-full max-w-6xl">
                 <Stats stats={stats} />
-              </div>
-            </section>
-
-            {/* Q&A Demo */}
-            <section id="demo" data-scroll-reveal className="relative px-4">
-              <div className="mx-auto w-full max-w-6xl">
-                <AskDemo />
               </div>
             </section>
 
